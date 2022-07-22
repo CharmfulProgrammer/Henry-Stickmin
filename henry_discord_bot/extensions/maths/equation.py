@@ -1,3 +1,4 @@
+from asyncio import wait_for
 import lightbulb
 import hikari
 import requests
@@ -10,7 +11,6 @@ base_url = "https://x-math.herokuapp.com/api/"
 @lightbulb.command("equation", "Gives a math equation for you to solve", aliases=["eq"])
 @lightbulb.implements(lightbulb.PrefixCommand)
 async def equation(ctx: lightbulb.Context):
-    # for now, it'll be updated
     res = requests.get(base_url + "random")
     data = res.json()
 
@@ -18,7 +18,19 @@ async def equation(ctx: lightbulb.Context):
     answer = data["answer"]
 
     await ctx.respond(expression)
+    # bot waiting for answer here
+    event: hikari.events.GuildMessageCreateEvent = await ctx.bot.wait_for(
+        hikari.events.GuildMessageCreateEvent,
+        timeout=20,
+        predicate=lambda e: e.author_id == ctx.author.id
+    )
 
+    
+    if event.content == str(answer):
+        await event.message.respond("correct")
+    else:
+        await event.message.respond(f"wrong, the correct answer is {answer}")
+    
 
 
 
